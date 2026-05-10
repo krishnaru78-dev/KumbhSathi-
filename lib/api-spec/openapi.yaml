@@ -3,20 +3,44 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: KumbhSathi API - Pilgrimage companion for Kumbh Mela 2027
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: dashboard
+    description: Dashboard summary
+  - name: temples
+    description: Temple explorer
+  - name: events
+    description: Events and schedules
+  - name: crowd
+    description: Crowd monitoring
+  - name: emergencies
+    description: SOS and emergency
+  - name: lostFound
+    description: Lost and found
+  - name: services
+    description: Nearby services
+  - name: alerts
+    description: Announcements and alerts
+  - name: ai
+    description: AI assistant
+  - name: admin
+    description: Admin panel
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +48,953 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Auth ───────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register with email/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/guest:
+    post:
+      operationId: guestLogin
+      tags: [auth]
+      summary: Guest login (no credentials)
+      responses:
+        "200":
+          description: Guest session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── Users ───────────────────────────────────────────────────────────────────
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/emergency-contacts:
+    put:
+      operationId: updateEmergencyContacts
+      tags: [users]
+      summary: Update emergency contacts
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contacts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/EmergencyContact"
+              required:
+                - contacts
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/bookmarks:
+    get:
+      operationId: getUserBookmarks
+      tags: [users]
+      summary: Get user bookmarks
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bookmarks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bookmark"
+
+  # ─── Dashboard ───────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Home dashboard summary
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/weather:
+    get:
+      operationId: getWeather
+      tags: [dashboard]
+      summary: Current weather at Kumbh location
+      responses:
+        "200":
+          description: Weather data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Weather"
+
+  /dashboard/active-alerts:
+    get:
+      operationId: getActiveAlerts
+      tags: [dashboard]
+      summary: Active emergency alerts for dashboard
+      responses:
+        "200":
+          description: Active alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  # ─── Temples ─────────────────────────────────────────────────────────────────
+  /temples:
+    get:
+      operationId: listTemples
+      tags: [temples]
+      summary: List all temples
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Temples list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Temple"
+
+  /temples/{templeId}:
+    get:
+      operationId: getTemple
+      tags: [temples]
+      summary: Get temple details
+      parameters:
+        - name: templeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Temple details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Temple"
+
+  /temples/{templeId}/bookmark:
+    post:
+      operationId: bookmarkTemple
+      tags: [temples]
+      summary: Bookmark a temple
+      parameters:
+        - name: templeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bookmarked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bookmark"
+    delete:
+      operationId: removeTempleBookmark
+      tags: [temples]
+      summary: Remove temple bookmark
+      parameters:
+        - name: templeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+
+  # ─── Events ──────────────────────────────────────────────────────────────────
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List events and rituals
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [aarti, bathing, procession, ritual, announcement]
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Events list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /events/upcoming:
+    get:
+      operationId: getUpcomingEvents
+      tags: [events]
+      summary: Next 24h events
+      responses:
+        "200":
+          description: Upcoming events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /events/bathing-dates:
+    get:
+      operationId: getBathingDates
+      tags: [events]
+      summary: Important bathing dates (Shahi Snan)
+      responses:
+        "200":
+          description: Bathing dates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BathingDate"
+
+  /events/{eventId}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get event details
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  # ─── Crowd ────────────────────────────────────────────────────────────────────
+  /crowd/overview:
+    get:
+      operationId: getCrowdOverview
+      tags: [crowd]
+      summary: Overall crowd level summary
+      responses:
+        "200":
+          description: Crowd overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrowdOverview"
+
+  /crowd/zones:
+    get:
+      operationId: listCrowdZones
+      tags: [crowd]
+      summary: All crowd zones with density
+      responses:
+        "200":
+          description: Zones list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrowdZone"
+
+  /crowd/zones/{zoneId}:
+    get:
+      operationId: getCrowdZone
+      tags: [crowd]
+      summary: Single zone crowd data
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Zone data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrowdZone"
+    put:
+      operationId: updateCrowdZone
+      tags: [crowd]
+      summary: Update zone crowd level (admin)
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                level:
+                  type: string
+                  enum: [low, medium, high, critical]
+                estimatedCount:
+                  type: integer
+              required:
+                - level
+      responses:
+        "200":
+          description: Updated zone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrowdZone"
+
+  /crowd/heatmap:
+    get:
+      operationId: getCrowdHeatmap
+      tags: [crowd]
+      summary: Heatmap data points for map overlay
+      responses:
+        "200":
+          description: Heatmap points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HeatmapPoint"
+
+  # ─── Emergencies ─────────────────────────────────────────────────────────────
+  /emergencies/sos:
+    post:
+      operationId: triggerSOS
+      tags: [emergencies]
+      summary: Trigger SOS emergency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SOSRequest"
+      responses:
+        "201":
+          description: SOS triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SOSResponse"
+
+  /emergencies/contacts:
+    get:
+      operationId: getEmergencyContacts
+      tags: [emergencies]
+      summary: Kumbh emergency hotlines
+      responses:
+        "200":
+          description: Emergency contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmergencyHotline"
+
+  /emergencies/nearby:
+    get:
+      operationId: getNearbyEmergencyServices
+      tags: [emergencies]
+      summary: Nearby hospitals and police
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [hospital, police, medical_camp, all]
+      responses:
+        "200":
+          description: Nearby services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NearbyService"
+
+  # ─── Lost & Found ─────────────────────────────────────────────────────────────
+  /lost-found:
+    get:
+      operationId: listLostFoundReports
+      tags: [lostFound]
+      summary: List lost & found reports
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, resolved, searching]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [person, child, item]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundList"
+    post:
+      operationId: createLostFoundReport
+      tags: [lostFound]
+      summary: Create a lost/found report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLostFoundRequest"
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundReport"
+
+  /lost-found/stats:
+    get:
+      operationId: getLostFoundStats
+      tags: [lostFound]
+      summary: Lost & found stats (wow endpoint)
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundStats"
+
+  /lost-found/{reportId}:
+    get:
+      operationId: getLostFoundReport
+      tags: [lostFound]
+      summary: Get report details
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundReport"
+    put:
+      operationId: updateLostFoundReport
+      tags: [lostFound]
+      summary: Update report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLostFoundRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundReport"
+    delete:
+      operationId: deleteLostFoundReport
+      tags: [lostFound]
+      summary: Delete report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /lost-found/{reportId}/resolve:
+    post:
+      operationId: resolveLostFoundReport
+      tags: [lostFound]
+      summary: Mark report as resolved
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundReport"
+
+  # ─── Services ─────────────────────────────────────────────────────────────────
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List all services/POIs
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [hospital, police, toilet, parking, bus_stand, food, ghat, medical_camp, lost_found_center]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Services list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServicePoint"
+
+  /services/nearby:
+    get:
+      operationId: getNearbyServices
+      tags: [services]
+      summary: Services near a location
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 1000
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Nearby services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServicePoint"
+
+  # ─── Alerts ───────────────────────────────────────────────────────────────────
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List all alerts and announcements
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [emergency, weather, crowd, announcement, event]
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+    post:
+      operationId: createAlert
+      tags: [alerts]
+      summary: Create alert (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+  /alerts/{alertId}:
+    put:
+      operationId: updateAlert
+      tags: [alerts]
+      summary: Update alert (admin)
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+    delete:
+      operationId: deleteAlert
+      tags: [alerts]
+      summary: Delete alert (admin)
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── AI ───────────────────────────────────────────────────────────────────────
+  /ai/chat:
+    post:
+      operationId: sendAiMessage
+      tags: [ai]
+      summary: Send message to Kumbh AI Guide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatRequest"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiChatResponse"
+
+  /ai/conversations/{sessionId}:
+    get:
+      operationId: getAiConversation
+      tags: [ai]
+      summary: Get conversation history
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiMessage"
+    delete:
+      operationId: clearAiConversation
+      tags: [ai]
+      summary: Clear conversation history
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cleared
+
+  # ─── Admin ────────────────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Admin dashboard stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/sos-incidents:
+    get:
+      operationId: listSOSIncidents
+      tags: [admin]
+      summary: All SOS incidents
+      responses:
+        "200":
+          description: Incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SOSIncident"
+
+  /admin/lost-found/{reportId}/approve:
+    put:
+      operationId: approveLostFoundReport
+      tags: [admin]
+      summary: Approve lost/found report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostFoundReport"
+
+  /admin/users:
+    get:
+      operationId: listUsers
+      tags: [admin]
+      summary: List all users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  total:
+                    type: integer
+                required:
+                  - users
+                  - total
+
+# ─── Schemas ──────────────────────────────────────────────────────────────────
 components:
   schemas:
     HealthStatus:
@@ -34,3 +1005,862 @@ components:
       required:
         - status
 
+    # Auth
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        phone:
+          type: string
+        language:
+          type: string
+          enum: [en, hi, mr]
+          default: hi
+      required:
+        - name
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    # User
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        avatar:
+          type: string
+          nullable: true
+        language:
+          type: string
+          enum: [en, hi, mr]
+        role:
+          type: string
+          enum: [user, admin, guest]
+        emergencyContacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmergencyContact"
+        medicalInfo:
+          $ref: "#/components/schemas/MedicalInfo"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - role
+        - language
+        - createdAt
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        avatar:
+          type: string
+        language:
+          type: string
+          enum: [en, hi, mr]
+        medicalInfo:
+          $ref: "#/components/schemas/MedicalInfo"
+
+    EmergencyContact:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        relation:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - relation
+
+    MedicalInfo:
+      type: object
+      properties:
+        bloodGroup:
+          type: string
+        allergies:
+          type: string
+        conditions:
+          type: string
+        medications:
+          type: string
+
+    Bookmark:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [temple, service, event]
+        referenceId:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - referenceId
+        - name
+        - createdAt
+
+    # Dashboard
+    DashboardSummary:
+      type: object
+      properties:
+        crowdLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        crowdCount:
+          type: integer
+        activeAlerts:
+          type: integer
+        openSOSCount:
+          type: integer
+        openLostCount:
+          type: integer
+        upcomingEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        weather:
+          $ref: "#/components/schemas/Weather"
+        todayBathing:
+          type: boolean
+        nearbyServicesCount:
+          type: integer
+      required:
+        - crowdLevel
+        - crowdCount
+        - activeAlerts
+        - openSOSCount
+        - openLostCount
+        - upcomingEvents
+        - todayBathing
+        - nearbyServicesCount
+
+    Weather:
+      type: object
+      properties:
+        temperature:
+          type: number
+        feelsLike:
+          type: number
+        humidity:
+          type: number
+        condition:
+          type: string
+        icon:
+          type: string
+        windSpeed:
+          type: number
+        location:
+          type: string
+      required:
+        - temperature
+        - condition
+        - humidity
+        - location
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [emergency, weather, crowd, announcement, event]
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, danger, critical]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - type
+        - title
+        - message
+        - severity
+        - isActive
+        - createdAt
+
+    CreateAlertRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [emergency, weather, crowd, announcement, event]
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, danger, critical]
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - title
+        - message
+        - severity
+
+    UpdateAlertRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, danger, critical]
+        isActive:
+          type: boolean
+
+    # Temples
+    Temple:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nameHindi:
+          type: string
+        description:
+          type: string
+        history:
+          type: string
+        timings:
+          type: string
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        rules:
+          type: array
+          items:
+            type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        address:
+          type: string
+        nearbyServices:
+          type: array
+          items:
+            type: string
+        isBookmarked:
+          type: boolean
+        crowdLevel:
+          type: string
+          enum: [low, medium, high, critical]
+      required:
+        - id
+        - name
+        - nameHindi
+        - description
+        - timings
+        - lat
+        - lng
+        - address
+
+    # Events
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        titleHindi:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [aarti, bathing, procession, ritual, announcement]
+        location:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+        isShahiSnan:
+          type: boolean
+        importance:
+          type: string
+          enum: [high, medium, low]
+        image:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - titleHindi
+        - type
+        - location
+        - startTime
+        - isShahiSnan
+        - importance
+
+    BathingDate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nameHindi:
+          type: string
+        date:
+          type: string
+          format: date
+        isShahiSnan:
+          type: boolean
+        significance:
+          type: string
+        expectedCrowd:
+          type: string
+          enum: [high, very_high, extreme]
+      required:
+        - id
+        - name
+        - nameHindi
+        - date
+        - isShahiSnan
+        - significance
+        - expectedCrowd
+
+    # Crowd
+    CrowdOverview:
+      type: object
+      properties:
+        overallLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        totalEstimated:
+          type: integer
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrowdZone"
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - overallLevel
+        - totalEstimated
+        - zones
+        - updatedAt
+
+    CrowdZone:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        level:
+          type: string
+          enum: [low, medium, high, critical]
+        estimatedCount:
+          type: integer
+        maxCapacity:
+          type: integer
+        lat:
+          type: number
+        lng:
+          type: number
+        radius:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - level
+        - estimatedCount
+        - maxCapacity
+        - lat
+        - lng
+        - radius
+        - updatedAt
+
+    HeatmapPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        weight:
+          type: number
+      required:
+        - lat
+        - lng
+        - weight
+
+    # Emergencies
+    SOSRequest:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        message:
+          type: string
+        userId:
+          type: string
+      required:
+        - lat
+        - lng
+
+    SOSResponse:
+      type: object
+      properties:
+        incidentId:
+          type: string
+        status:
+          type: string
+        nearestHospital:
+          $ref: "#/components/schemas/NearbyService"
+          nullable: true
+        nearestPolice:
+          $ref: "#/components/schemas/NearbyService"
+          nullable: true
+        estimatedResponseTime:
+          type: integer
+          description: Minutes
+      required:
+        - incidentId
+        - status
+
+    SOSIncident:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+          nullable: true
+        userName:
+          type: string
+          nullable: true
+        lat:
+          type: number
+        lng:
+          type: number
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, responded, resolved]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - lat
+        - lng
+        - status
+        - createdAt
+
+    EmergencyHotline:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        number:
+          type: string
+        type:
+          type: string
+          enum: [police, ambulance, fire, helpline, women_helpline]
+        available24x7:
+          type: boolean
+      required:
+        - id
+        - name
+        - number
+        - type
+        - available24x7
+
+    NearbyService:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        distance:
+          type: number
+          description: Distance in meters
+        phone:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - type
+        - lat
+        - lng
+        - distance
+
+    # Lost & Found
+    LostFoundReport:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [person, child, item]
+        status:
+          type: string
+          enum: [open, searching, resolved, rejected]
+        title:
+          type: string
+        description:
+          type: string
+        name:
+          type: string
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          enum: [male, female, other]
+          nullable: true
+        lastSeenLocation:
+          type: string
+        lastSeenTime:
+          type: string
+          format: date-time
+        photos:
+          type: array
+          items:
+            type: string
+        contactName:
+          type: string
+        contactPhone:
+          type: string
+        reportedBy:
+          type: string
+        isApproved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - status
+        - title
+        - description
+        - lastSeenLocation
+        - lastSeenTime
+        - contactName
+        - contactPhone
+        - reportedBy
+        - isApproved
+        - createdAt
+
+    LostFoundList:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/LostFoundReport"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - reports
+        - total
+        - page
+        - totalPages
+
+    LostFoundStats:
+      type: object
+      properties:
+        totalOpen:
+          type: integer
+        totalResolved:
+          type: integer
+        childrenFound:
+          type: integer
+        resolvedToday:
+          type: integer
+      required:
+        - totalOpen
+        - totalResolved
+        - childrenFound
+        - resolvedToday
+
+    CreateLostFoundRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [person, child, item]
+        title:
+          type: string
+        description:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [male, female, other]
+        lastSeenLocation:
+          type: string
+        lastSeenTime:
+          type: string
+          format: date-time
+        photos:
+          type: array
+          items:
+            type: string
+        contactName:
+          type: string
+        contactPhone:
+          type: string
+      required:
+        - type
+        - title
+        - description
+        - lastSeenLocation
+        - lastSeenTime
+        - contactName
+        - contactPhone
+
+    UpdateLostFoundRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        contactPhone:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+
+    # Services
+    ServicePoint:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [hospital, police, toilet, parking, bus_stand, food, ghat, medical_camp, lost_found_center]
+        lat:
+          type: number
+        lng:
+          type: number
+        address:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        openHours:
+          type: string
+          nullable: true
+        distance:
+          type: number
+          nullable: true
+      required:
+        - id
+        - name
+        - type
+        - lat
+        - lng
+
+    # AI
+    AiChatRequest:
+      type: object
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: string
+        language:
+          type: string
+          enum: [en, hi, mr]
+          default: hi
+        context:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+            currentScreen:
+              type: string
+      required:
+        - message
+        - sessionId
+
+    AiChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+        sessionId:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        relatedType:
+          type: string
+          nullable: true
+          enum: [temple, event, service, emergency, null]
+      required:
+        - reply
+        - sessionId
+        - suggestions
+
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - content
+        - timestamp
+
+    # Admin
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        activeSOSCount:
+          type: integer
+        openLostCount:
+          type: integer
+        resolvedLostCount:
+          type: integer
+        activeAlerts:
+          type: integer
+        crowdLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        todayRegistrations:
+          type: integer
+        totalMessages:
+          type: integer
+      required:
+        - totalUsers
+        - activeSOSCount
+        - openLostCount
+        - resolvedLostCount
+        - activeAlerts
+        - crowdLevel
+        - todayRegistrations
+        - totalMessages
