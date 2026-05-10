@@ -9,9 +9,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = {
-  en: ["Tell me about Sangam Ghat", "What are the bathing dates?", "Emergency helplines", "Crowd status", "How to reach Triveni Sangam?"],
-  hi: ["संगम घाट के बारे में बताएं", "स्नान तिथियां क्या हैं?", "आपातकालीन नंबर", "भीड़ की स्थिति", "त्रिवेणी संगम कैसे पहुंचें?"],
-  mr: ["संगम घाटाबद्दल सांगा", "स्नानाच्या तारखा", "आणीबाणी क्रमांक", "गर्दीची स्थिती"],
+  en: ["Tell me about Ramkund Ghat", "What are the Shahi Snan dates?", "Emergency helplines Nashik", "Crowd status at Ramkund", "How to reach Trimbakeshwar?"],
+  hi: ["रामकुंड घाट के बारे में बताएं", "शाही स्नान तिथियां क्या हैं?", "नाशिक आपातकालीन नंबर", "भीड़ की स्थिति", "त्र्यंबकेश्वर कैसे पहुंचें?"],
+  mr: ["रामकुंड घाटाबद्दल सांगा", "शाही स्नानाच्या तारखा", "आणीबाणी क्रमांक", "गर्दीची स्थिती", "त्र्यंबकेश्वर मंदिर"],
 };
 
 export default function AIChat() {

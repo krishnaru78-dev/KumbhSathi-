@@ -12,6 +12,7 @@ import servicesRouter from "./services";
 import alertsRouter from "./alerts";
 import aiRouter from "./ai";
 import adminRouter from "./admin";
+import hotelsRouter from "./hotels";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(servicesRouter);
 router.use(alertsRouter);
 router.use(aiRouter);
 router.use(adminRouter);
+router.use(hotelsRouter);
 
 export default router;
